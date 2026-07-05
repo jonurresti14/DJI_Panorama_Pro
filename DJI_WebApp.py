@@ -435,7 +435,11 @@ HTML_TEMPLATE = """
         body { display: flex; font-family: 'Inter', sans-serif; background: #0f172a; color: white; height: 100vh; overflow: hidden; }
         
         #sidebar { width: 380px; min-width: 380px; background: #0f172a; border-right: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; }
-        #sidebar-header { padding: 28px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        #sidebar-header { padding: 28px; border-bottom: 1px solid rgba(255,255,255,0.08); position: relative; }
+        
+        .lang-picker { position: absolute; top: 28px; right: 28px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; outline: none; }
+        .lang-picker option { background: #0f172a; color: white; }
+        
         h1 { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
         .subtitle { color: #94a3b8; font-size: 0.82rem; line-height: 1.6; margin-bottom: 20px; }
         
@@ -477,17 +481,24 @@ HTML_TEMPLATE = """
 <body>
     <div id="sidebar">
         <div id="sidebar-header">
+            <select id="lang-sel" class="lang-picker" onchange="changeLang()">
+                <option value="en">EN</option>
+                <option value="es">ES</option>
+                <option value="fr">FR</option>
+                <option value="de">DE</option>
+                <option value="it">IT</option>
+            </select>
             <h1>DJI Panorama Pro</h1>
-            <div class="subtitle">Selecciona la carpeta <b>DCIM</b> del dron. Se detectarán automáticamente todas las panorámicas, ordenadas por fecha. El algoritmo las coserá usando los datos de posición del gimbal.</div>
+            <div class="subtitle" id="t-sub">Select the drone's <b>DCIM</b> folder. Panoramas will be detected automatically and sorted by date. The algorithm stitches them using gimbal position data.</div>
             <button class="btn" id="select-btn" onclick="selectFolder()">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                Seleccionar Carpeta DCIM
+                <span id="t-btn-txt">Select DCIM Folder</span>
             </button>
         </div>
         <div id="pano-list">
             <div class="empty-state">
                 <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                <div>Esperando carpeta...</div>
+                <div id="t-wait">Waiting for folder...</div>
             </div>
         </div>
     </div>
@@ -496,36 +507,67 @@ HTML_TEMPLATE = """
         <div id="overlay">
             <div id="loading-box">
                 <div class="spinner"></div>
-                <div style="font-weight:600; color:#a5b4fc; font-size:1.1rem;" id="load-title">Cosiendo panorámica...</div>
-                <div style="font-size:0.82rem; color:#94a3b8; margin-top:8px;" id="load-sub">El algoritmo está alineando y fusionando.<br>Puede tardar 1-2 minutos.</div>
+                <div style="font-weight:600; color:#a5b4fc; font-size:1.1rem;" id="t-stitch">Stitching panorama...</div>
+                <div style="font-size:0.82rem; color:#94a3b8; margin-top:8px;" id="t-stitchsub">The algorithm is aligning and blending.<br>This may take 1-2 minutes.</div>
             </div>
         </div>
         <div id="toolbar">
             <button class="btn btn-sm btn-green" onclick="downloadCurrent()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Descargar JPG
+                <span id="t-down-txt">Download JPG</span>
             </button>
         </div>
         <div id="panorama"></div>
     </div>
     
     <script>
+        const tDict = {
+            en: { sub: "Select the drone's <b>DCIM</b> folder. Panoramas will be detected automatically and sorted by date. The algorithm stitches them using gimbal position data.", btn: "Select DCIM Folder", wait: "Waiting for folder...", err: "No panoramas found.", stitch: "Stitching panorama...", stitchsub: "The algorithm is aligning and blending.<br>This may take 1-2 minutes.", down: "Download JPG", search: "Searching...", error_conn: "Server connection error.", err_server: "Error: ", f_fotos: " photos" },
+            es: { sub: "Selecciona la carpeta <b>DCIM</b> del dron. Se detectarán automáticamente todas las panorámicas, ordenadas por fecha. El algoritmo las coserá usando los datos de posición del gimbal.", btn: "Seleccionar Carpeta DCIM", wait: "Esperando carpeta...", err: "No se encontraron panorámicas.", stitch: "Cosiendo panorámica...", stitchsub: "El algoritmo está alineando y fusionando.<br>Puede tardar 1-2 minutos.", down: "Descargar JPG", search: "Buscando...", error_conn: "Error de conexión con el servidor.", err_server: "Error: ", f_fotos: " fotos" },
+            fr: { sub: "Sélectionnez le dossier <b>DCIM</b> du drone. Les panoramas seront détectés et triés par date. L'algorithme les assemble à l'aide des données du cardan.", btn: "Sélectionner Dossier", wait: "En attente de dossier...", err: "Aucun panorama trouvé.", stitch: "Création du panorama...", stitchsub: "L'algorithme aligne et fusionne.<br>Cela peut prendre 1 à 2 minutes.", down: "Télécharger JPG", search: "Recherche...", error_conn: "Erreur de connexion au serveur.", err_server: "Erreur: ", f_fotos: " photos" },
+            de: { sub: "Wählen Sie den <b>DCIM</b>-Ordner der Drohne. Panoramen werden automatisch erkannt. Der Algorithmus fügt sie anhand von Gimbal-Positionsdaten zusammen.", btn: "Ordner Auswählen", wait: "Warten auf Ordner...", err: "Keine Panoramen gefunden.", stitch: "Panorama wird erstellt...", stitchsub: "Algorithmus richtet aus und verschmilzt.<br>Dies kann 1-2 Minuten dauern.", down: "JPG Herunterladen", search: "Suchen...", error_conn: "Serververbindungsfehler.", err_server: "Fehler: ", f_fotos: " fotos" },
+            it: { sub: "Seleziona la cartella <b>DCIM</b> del drone. I panorami verranno rilevati automaticamente. L'algoritmo li unisce usando i dati di posizione del gimbal.", btn: "Seleziona Cartella", wait: "In attesa della cartella...", err: "Nessun panorama trovato.", stitch: "Creazione panorama...", stitchsub: "L'algoritmo sta allineando e fondendo.<br>Potrebbero volerci 1-2 minuti.", down: "Scarica JPG", search: "Ricerca...", error_conn: "Errore di connessione al server.", err_server: "Errore: ", f_fotos: " foto" }
+        };
+        let curLang = 'en';
+
+        function changeLang() {
+            curLang = document.getElementById('lang-sel').value;
+            updateUI();
+        }
+
+        function updateUI() {
+            let t = tDict[curLang];
+            document.getElementById('t-sub').innerHTML = t.sub;
+            document.getElementById('t-btn-txt').innerText = t.btn;
+            if(document.getElementById('t-wait')) document.getElementById('t-wait').innerText = t.wait;
+            if(document.getElementById('t-err')) document.getElementById('t-err').innerText = t.err;
+            document.getElementById('t-stitch').innerText = t.stitch;
+            document.getElementById('t-stitchsub').innerHTML = t.stitchsub;
+            document.getElementById('t-down-txt').innerText = t.down;
+            
+            // Actualizar boton si estaba buscando
+            const btnTxt = document.getElementById('t-btn-txt');
+            if (document.getElementById('select-btn').disabled) {
+                btnTxt.innerText = t.search;
+            }
+        }
+
         let viewer = null;
         let currentId = null;
         
         async function selectFolder() {
             const btn = document.getElementById('select-btn');
             btn.disabled = true;
-            btn.textContent = 'Buscando...';
+            document.getElementById('t-btn-txt').innerText = tDict[curLang].search;
             
             const res = await fetch('/api/select_folder');
             const data = await res.json();
             
             btn.disabled = false;
-            btn.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Seleccionar Carpeta DCIM';
+            document.getElementById('t-btn-txt').innerText = tDict[curLang].btn;
             
             if (data.error || !data.panoramas || data.panoramas.length === 0) {
-                document.getElementById('pano-list').innerHTML = '<div class="empty-state"><div style="color:#ef4444">No se encontraron panorámicas.</div></div>';
+                document.getElementById('pano-list').innerHTML = '<div class="empty-state"><div style="color:#ef4444" id="t-err">' + tDict[curLang].err + '</div></div>';
                 return;
             }
             
@@ -536,7 +578,7 @@ HTML_TEMPLATE = """
                 const div = document.createElement('div');
                 div.className = 'pano-item';
                 div.id = 'pano-' + p.id;
-                div.innerHTML = '<div class="pano-name">' + p.name + '</div><div class="pano-info"><span>📅 ' + p.date_str + '</span><span>📷 ' + p.count + ' fotos</span></div>';
+                div.innerHTML = '<div class="pano-name">' + p.name + '</div><div class="pano-info"><span>📅 ' + p.date_str + '</span><span>📷 ' + p.count + tDict[curLang].f_fotos + '</span></div>';
                 div.onclick = () => loadPano(p.id);
                 list.appendChild(div);
             });
@@ -559,7 +601,7 @@ HTML_TEMPLATE = """
                 document.getElementById('loading-box').style.display = 'none';
                 
                 if (data.error) {
-                    alert('Error: ' + data.error);
+                    alert(tDict[curLang].err_server + data.error);
                     return;
                 }
                 
@@ -578,7 +620,7 @@ HTML_TEMPLATE = """
                 });
             } catch(e) {
                 document.getElementById('loading-box').style.display = 'none';
-                alert('Error de conexión con el servidor.');
+                alert(tDict[curLang].error_conn);
             }
         }
         

@@ -1,54 +1,56 @@
 # DJI Panorama Pro 🚁📸
 
-Una herramienta profesional, automática y **completamente portátil** para coser panorámicas esféricas (360x180°) a partir de fotografías tomadas por drones DJI (especialmente diseñada y calibrada para el DJI Mini 4K, pero compatible con la mayoría de modelos).
+A professional, automatic, and **completely portable** tool for stitching spherical panoramas (360x180°) from photographs taken by DJI drones. It is specially designed and calibrated for the DJI Mini 4K but is fully compatible with most models.
 
-![Captura de pantalla de la Interfaz](https://i.imgur.com/example.png) *(Puedes añadir aquí una captura más adelante)*
+![App Screenshot](https://i.imgur.com/example.png) *(You can add a screenshot here later)*
 
-## ✨ Características Principales
+## ✨ Key Features
 
-* **Cero Configuración:** No necesitas instalar Python, ni librerías, ni usar la línea de comandos. Solo ejecuta el `.exe`.
-* **Motor Matemático Basado en EXIF:** A diferencia de otros programas que se pierden con cielos vacíos o agua, este programa extrae los metadatos de giro exactos (`GimbalYawDegree`, `Pitch`, `Roll`) inyectados por el dron en el archivo `.JPG` para proyectar matemáticamente la esfera perfecta.
-* **Fusión MultiBanda (MultiBandBlender):** Utiliza un algoritmo profesional de fusión de pirámides laplacianas y diagramas de Voronoi. El ganador de cada píxel se lleva todo, eliminando totalmente el "ghosting" y suavizando los cambios de exposición entre el cielo y el suelo.
-* **Calibración Precisa del FOV:** Ajuste dinámico del campo de visión (FOV 80.0°) calculado para tener en cuenta la corrección interna de lente que aplican los drones DJI. ¡Adiós a los elementos del paisaje partidos a la mitad!
-* **Visor 360° Integrado:** Incluye un servidor web y la librería **Pannellum** para poder visualizar y navegar interactivamente por las panorámicas en tu propio navegador justo después de que se generen.
-* **Escalado Automático de Cielos:** Relleno inteligente de los huecos negros en el cénit (ya que los drones no pueden mirar 90° hacia arriba) estirando el gradiente natural del cielo.
+* **Zero Configuration:** No need to install Python, libraries, or use the command line. Just run the `.exe` file!
+* **EXIF-Based Mathematical Engine:** Unlike other software that fails with empty skies or water, this program extracts the exact gimbal rotation metadata (`GimbalYawDegree`, `Pitch`, `Roll`) injected by the drone into the `.JPG` files to mathematically project the perfect sphere.
+* **Multi-Band Blending:** Uses a professional Laplacian pyramid blending algorithm and Voronoi diagrams. "Winner takes all" pixel selection completely eliminates ghosting and smooths out exposure differences between the sky and the ground.
+* **Precise FOV Calibration:** Dynamic Field of View adjustment (FOV 80.0°) calculated to account for the internal lens distortion correction applied by DJI drones. Say goodbye to landscape elements cut in half!
+* **Integrated 360° Viewer:** Includes a web server and the **Pannellum** library so you can view and interactively navigate your panoramas in your own browser right after they are generated.
+* **Automatic Sky Scaling:** Smart filling of the black holes at the zenith (since drones cannot look 90° straight up) by stretching the natural gradient of the sky.
+* **Multilingual Interface:** The UI is available in English, Spanish, French, German, and Italian.
 
-## 🚀 Cómo Usarlo
+## 🚀 How to Use
 
-Al ser un programa `standalone` (portable), el uso es extremadamente sencillo:
+Being a standalone application, using it is extremely simple:
 
-1. **Descarga** el archivo `DJI_WebApp.exe` de este repositorio.
-2. **Haz doble clic** en él. Aparecerá una consola negra (no la cierres, es el servidor en segundo plano).
-3. Tu navegador web predeterminado se abrirá automáticamente en `http://127.0.0.1:5000`.
-4. Pulsa en **"Seleccionar Carpeta"** y busca el directorio donde están tus fotos (por ejemplo `E:\DJI Mini 4K\DCIM\PANORAMA\100_0205`). El programa agrupará y coserá las imágenes.
-5. Observa el visor 360 interactivo y pulsa el **botón de Descarga** para guardar tu panorámica final en alta resolución.
+1. **Download** the `DJI_WebApp.exe` file from this repository.
+2. **Double-click** it. A black console window will appear (do not close it, it's the background server).
+3. Your default web browser will automatically open to `http://127.0.0.1:5000`.
+4. Click on **"Select DCIM Folder"** and locate the directory where your drone photos are (for example `E:\DJI Mini 4K\DCIM\PANORAMA\100_0205`). The program will automatically group and stitch the images.
+5. Enjoy the interactive 360 viewer and click the **Download** button to save your final panorama in high resolution.
 
-> **Nota:** La primera vez que lo abras puede tardar unos segundos extra, ya que el archivo ejecutable se descomprime en una carpeta temporal.
+> **Note:** The first time you open it, it may take a few extra seconds, as the executable file decompresses into a temporary folder.
 
-## 🛠 Entorno de Desarrollo (Para Programadores)
+## 🛠 Development Environment (For Programmers)
 
-Si deseas modificar el código o no quieres usar la versión precompilada en `.exe`:
+If you want to modify the code or don't want to use the precompiled `.exe` version:
 
-1. Clona el repositorio:
+1. Clone the repository:
    ```bash
    git clone https://github.com/jonurresti14/DJI_Panorama_Pro.git
    ```
-2. Instala las dependencias en Python (3.x):
+2. Install Python (3.x) dependencies:
    ```bash
    pip install opencv-python numpy flask
    ```
-3. Ejecuta el servidor manualmente:
+3. Run the server manually:
    ```bash
    python DJI_WebApp.py
    ```
+   Or use the included `START_WEBAPP.bat`.
 
-## 🏗 Cómo se compiló
+## 🏗 How it was compiled
 
-El proyecto fue compilado usando `PyInstaller` para incluir todos los paquetes de visión artificial (OpenCV) y el framework web (Flask) en un solo archivo:
+The project was compiled using `PyInstaller` to bundle all computer vision packages (OpenCV) and the web framework (Flask) into a single file:
 ```bash
 pyinstaller --onefile DJI_WebApp.py
 ```
 
-## 📜 Licencia
+## 📜 License
 
-Proporcionado "tal cual" para la comunidad de pilotos de drones. ¡Siéntete libre de modificarlo o mejorarlo!
+Provided "as is" for the drone pilot community. Feel free to modify or improve it!
